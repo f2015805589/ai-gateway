@@ -41,7 +41,7 @@ services:
       ADAPTER_ACCESS_KEY: ${CC_ADAPTER_ACCESS_KEY}
       DATA_DIR: /data
     ports:
-      - "127.0.0.1:8888:8888"  # 管理前端：http://localhost:8888 （默认只绑本机）
+      - "8888:8888"  # 管理前端：http://localhost:8888 （已开内网；仅本机使用可改回 127.0.0.1:8888:8888）
     volumes:
       - ./data/manager:/data
     depends_on:
