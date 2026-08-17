@@ -39,6 +39,20 @@ Set-ExecutionPolicy -Scope Process Bypass; .\setup.ps1
 
 **停止：双击 `stop.cmd`**（容器停止，`./data` 数据保留；想彻底清空再加 `docker compose down -v`）。重启随时再双击 `start.cmd`。
 
+### 从 GitHub 部署（clone 后直接跑）
+
+本仓库**不需要补任何文件**：`setup.ps1` 会自动生成 `.env`（随机密钥）、自动 clone `cc-adapter`、容器首次启动自动建库。跑起来后：
+
+- **方式 A（全新账号）**：直接在管理台 http://localhost:8888 填 Codex / OpenCode / Command Code 账号 → 一键应用
+- **方式 B（恢复已有配置）**：把私有配置仓库 `ai-gateway-private` 的两个文件复制进来，即可完整恢复：
+  ```powershell
+  copy ..\ai-gateway-private\.env .\
+  copy ..\ai-gateway-private\data\manager\settings.json .\data\manager\
+  ```
+  然后直接运行 setup.ps1（`.env` 已存在则不会覆盖）。
+
+> 唯一注意：`settings.json` 里的 `cc_access_key` 必须与 `.env` 的 `CC_ADAPTER_ACCESS_KEY` 一致（两个文件一起复制即可保证；全新部署时管理台会自动用新生成的值）。
+
 ## 2. 在管理台填账号（全部在网页里完成）
 
 1. **第 0 步**：填 new-api 管理员账号（首次自动帮你初始化 root 管理员并登录）。
