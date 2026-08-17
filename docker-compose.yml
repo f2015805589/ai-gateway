@@ -1,0 +1,55 @@
+# 个人 AI 网关 —— new-api（统一 API + 面板）+ command-code-adapter（Command Code 适配器）+ manager（管理前端）
+# 使用：先运行 setup.ps1（自动生成密钥并启动），然后打开 http://localhost:8888 在网页里填账号。
+services:
+  new-api:
+    image: calciumion/new-api:latest
+    container_name: ai-gw-new-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"   # REST API：所有客户端指向 http://localhost:3000/v1
+      - "3001:3001"   # Web 管理面板：http://localhost:3001
+    environment:
+      TZ: Asia/Shanghai
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-session-secret}
+      # 个人自用：关掉关键接口/全局 API 限流（默认每 IP 20 分钟 20 次，会被一键应用频繁触发）
+      CRITICAL_RATE_LIMIT_ENABLE: "false"
+      GLOBAL_API_RATE_LIMIT_ENABLE: "false"
+    volumes:
+      - ./data/new-api:/data
+    networks:
+      - gw
+
+  cc-adapter:
+    build: ./cc-adapter
+    container_name: ai-gw-cc-adapter
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      # 仅内网可达；对外暴露前确保已设置 CC_ADAPTER_ACCESS_KEY 并加 TLS
+      - "8080:8080"
+    networks:
+      - gw
+
+  manager:
+    build: ./manager
+    container_name: ai-gw-manager
+    restart: unless-stopped
+    environment:
+      NEW_API_URL: http://new-api:3000
+      CC_ADAPTER_URL: http://cc-adapter:8080
+      ADAPTER_ADMIN_PASSWORD: ${CC_ADAPTER_ADMIN_PASSWORD}
+      ADAPTER_ACCESS_KEY: ${CC_ADAPTER_ACCESS_KEY}
+      DATA_DIR: /data
+    ports:
+      - "127.0.0.1:8888:8888"  # 管理前端：http://localhost:8888 （默认只绑本机）
+    volumes:
+      - ./data/manager:/data
+    depends_on:
+      - new-api
+      - cc-adapter
+    networks:
+      - gw
+
+networks:
+  gw:
+    driver: bridge

@@ -1,0 +1,20 @@
+# Codex CLI 指向个人网关。
+# 用法：把本文件内容合并进 ~/.codex/config.toml（Windows: C:\Users\<你>\.codex\config.toml）
+# 然后：$env:MY_GATEWAY_KEY = "<你在 new-api 生成的令牌>"  之后正常运行 codex
+
+model = "gpt-5.6-sol"
+model_provider = "my-gateway"
+model_reasoning_summary = "auto"
+
+[model_providers.my-gateway]
+name = "openai"                 # 保持小写 openai，可启用远程 /responses/compact
+base_url = "http://localhost:3000"
+env_key = "MY_GATEWAY_KEY"     # 令牌放在这个环境变量里
+wire_api = "responses"         # Codex CLI 原生走 Responses 协议
+supports_websockets = true
+requires_openai_auth = true    # Codex App 需要此项
+
+# 注意：codex CLI 只调用 /v1/responses，因此它只能用
+#   - new-api 的 Codex 渠道（gpt-5.6-sol / gpt-5.5 / gpt-5.4 等）
+#   - OpenCode Zen/Go 渠道里走 /responses 的模型（GPT/Grok 系）
+# 想用 DeepSeek/Kimi 等 chat/completions 模型请改用 opencode 或其他客户端。

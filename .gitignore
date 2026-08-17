@@ -1,0 +1,15 @@
+# ============ 敏感配置（绝不提交） ============
+# 真实密钥/账号凭据：.env（setup.ps1 自动生成随机密钥；账号在 data/manager/settings.json）
+.env
+data/
+
+# ============ 第三方依赖（setup.ps1 会自动 git clone） ============
+cc-adapter/
+ref/
+
+# ============ 系统/日志 ============
+*.log
+Thumbs.db
+.DS_Store
+*.pyc
+__pycache__/

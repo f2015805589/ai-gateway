@@ -1,0 +1,25 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "my-gateway": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "My Gateway",
+      "options": {
+        "baseURL": "http://localhost:3000/v1",
+        "apiKey": "换成-new-api-令牌"
+      },
+      "models": {
+        "oc/minimax-m3": { "name": "oc/minimax-m3" },
+        "oc/kimi-k2.7-code": { "name": "oc/kimi-k2.7-code" },
+        "oc/deepseek-v4-flash": { "name": "oc/deepseek-v4-flash" },
+        "oc/deepseek-v4-pro": { "name": "oc/deepseek-v4-pro" },
+        "oc/glm-5.2": { "name": "oc/glm-5.2" },
+        "oc/qwen3.7-max": { "name": "oc/qwen3.7-max" },
+        "oc/gpt-5.6-luna": { "name": "oc/gpt-5.6-luna" },
+        "oc/grok-4.5": { "name": "oc/grok-4.5" },
+        "codex/gpt-5.6-sol": { "name": "codex/gpt-5.6-sol" },
+        "cc/claude-sonnet-4-6": { "name": "cc/claude-sonnet-4-6" }
+      }
+    }
+  }
+}
