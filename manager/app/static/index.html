@@ -100,6 +100,13 @@
   </section>
 
   <section>
+    <h2><span class="step">5</span>Gemini API key（Google AI Studio）</h2>
+    <div class="hint">在 <code>aistudio.google.com</code> 创建 API key（<code>AIza...</code> 开头，多数账号有免费额度）。每个 key 一个渠道，模型名用裸名（如 <code>gemini-3-pro-preview</code>、<code>gemini-2.5-flash</code>）。</div>
+    <div id="gemini_rows"></div>
+    <button id="add_gemini" class="ghost">+ 添加 Gemini Key</button>
+  </section>
+
+  <section>
     <h2><span class="step">✓</span>一键应用：建渠道 + 生成统一令牌</h2>
     <div class="actions">
       <button id="btn_apply">保存账号 &amp; 一键应用</button>
@@ -201,6 +208,16 @@ const rowFactories = {
     d.append(name, models, groups, del);
     return d;
   },
+  gemini: (item) => {
+    const d = rowGrid("row cc");
+    const label = el("input", { type: "text", placeholder: "备注名" });
+    const key = el("input", { type: "password", placeholder: "AIza..." });
+    if (item) { label.value = item.label || ""; key.value = item.key || ""; }
+    const del = el("button", { className: "del" }, "✕");
+    del.onclick = () => d.remove();
+    d.append(label, key, del);
+    return d;
+  },
 };
 
 function collectRows(kind) {
@@ -220,11 +237,12 @@ async function loadConfig() {
   $("newapi_user").value = cfg.newapi_username || "";
   $("newapi_pass").value = "";
   $("cc_access").value = cfg.cc_access_key_set ? "（已设置，保持原样）" : "";
-  ["codex", "zen", "cc", "policy"].forEach(k => { const c = $(k + "_rows"); if (c) c.innerHTML = ""; });
+  ["codex", "zen", "cc", "policy", "gemini"].forEach(k => { const c = $(k + "_rows"); if (c) c.innerHTML = ""; });
   (cfg.codex_accounts || []).forEach(x => $("codex_rows").append(rowFactories.codex(x)));
   (cfg.opencode_keys || []).forEach(x => $("zen_rows").append(rowFactories.zen(x)));
   (cfg.cc_keys || []).forEach(x => $("cc_rows").append(rowFactories.cc(x)));
   (cfg.policies || []).forEach(x => $("policy_rows").append(rowFactories.policy(x)));
+  (cfg.gemini_keys || []).forEach(x => $("gemini_rows").append(rowFactories.gemini(x)));
   const badge = [];
   if (cfg.adapter_admin_password_set) badge.push("adapter 管理密钥：已注入");
   if (cfg.has_newapi_password) badge.push("new-api 密码：已保存");
@@ -238,6 +256,7 @@ async function saveConfig() {
     codex_accounts: collectRows("codex"),
     opencode_keys: collectRows("zen"),
     cc_keys: collectRows("cc"),
+    gemini_keys: collectRows("gemini"),
     policies: collectRows("policy"),
   };
   const pass = $("newapi_pass").value;
@@ -435,6 +454,7 @@ $("add_codex").onclick = () => $("codex_rows").append(rowFactories.codex());
 $("add_zen").onclick = () => $("zen_rows").append(rowFactories.zen());
 $("add_cc").onclick = () => $("cc_rows").append(rowFactories.cc());
 $("add_policy").onclick = () => $("policy_rows").append(rowFactories.policy());
+$("add_gemini").onclick = () => $("gemini_rows").append(rowFactories.gemini());
 $("btn_save0").onclick = async () => { try { clearErr(); await saveConfig(); $("status0").textContent = "已保存"; await refreshStatus(); } catch (e) { showErr(String(e)); } };
 $("btn_apply").onclick = apply;
 $("btn_balances").onclick = refreshBalances;

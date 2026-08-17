@@ -75,6 +75,11 @@ RETRY_STATUS_CODES = "100-199,300-399,400-407,409-499,500-503,505-523,525-599"
 CHANNEL_GROUPS = {"codex": "codex", "opencode": "opencode", "cc": "cc"}
 # 需要注册到分组倍率配置的组（IsUserSelectableGroup 要求组有倍率）
 REQUIRED_GROUPS = ["default", "vip", "svip", "codex", "opencode", "cc"]
+# Gemini API key 渠道（new-api 原生 type=24，base https://generativelanguage.googleapis.com）
+GEMINI_MODELS = [
+    "gemini-3.1-pro-preview", "gemini-3-pro-preview", "gemini-3-flash-preview",
+    "gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash",
+]
 
 CODEX_MODELS = [
     "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5",
@@ -164,6 +169,7 @@ def default_settings() -> dict:
         "codex_accounts": [],
         "opencode_keys": [],
         "cc_keys": [],
+        "gemini_keys": [],  # Google AI Studio API key（AIza...，new-api 原生 Gemini 渠道）
         "cc_access_key": ADAPTER_ACCESS_KEY,
         # 路由策略：按模型配置渠道顺序。每一条策略 = 一个 auto 分组令牌：
         # 模型列表(model_limits) + 渠道顺序(auto_groups)，失败自动跨组重试。
@@ -688,6 +694,7 @@ async def get_config():
                             "account_id": a.get("account_id", "")} for a in s["codex_accounts"]],
         "opencode_keys": [{"label": k.get("label", ""), "has_key": bool(k.get("key"))} for k in s["opencode_keys"]],
         "cc_keys": [{"label": k.get("label", ""), "has_key": bool(k.get("key"))} for k in s["cc_keys"]],
+        "gemini_keys": [{"label": k.get("label", ""), "has_key": bool(k.get("key"))} for k in s["gemini_keys"]],
         "cc_access_key_set": bool(s.get("cc_access_key")),
         "adapter_admin_password_set": bool(ADAPTER_ADMIN_PASSWORD),
         "policies": s.get("policies", []),
@@ -704,7 +711,8 @@ async def set_config(req: Request):
             s[field] = str(raw[field]).strip() if field != "newapi_url" else str(raw[field]).strip().rstrip("/")
     for field, key_names in (("codex_accounts", ("label", "access_token", "refresh_token", "account_id")),
                              ("opencode_keys", ("label", "key")),
-                             ("cc_keys", ("label", "key"))):
+                             ("cc_keys", ("label", "key")),
+                             ("gemini_keys", ("label", "key"))):
         if field in raw and isinstance(raw[field], list):
             cleaned = []
             for item in raw[field]:
@@ -855,6 +863,23 @@ async def apply():
             report["warnings"].append("未配置 Command Code 密钥，跳过 CC 渠道（随时可再加，不影响其余渠道）")
     except Exception as e:
         ups_errs.append(f"adapter 配置: {e}")
+
+    # 5.1 Gemini API key 渠道（new-api 原生 type=24）
+    for i, item in enumerate(s["gemini_keys"]):
+        key = item.get("key", "").strip()
+        if not key:
+            continue
+        try:
+            cid = client.add_channel({
+                "type": 24, "name": f"gemini-{item.get('label') or f'key-{i + 1}'}",
+                "key": key, "models": ",".join(GEMINI_MODELS),
+                "model_mapping": json.dumps({}, ensure_ascii=False),
+                "tag": MANAGED_TAG, "group": "default", "status": 1,
+                "priority": 1,
+            })
+            report["channels"].append({"name": f"gemini-{item.get('label')}", "id": cid, "type": "gemini"})
+        except Exception as e:
+            ups_errs.append(f"gemini 渠道({item.get('label')}): {e}")
 
     # 5.5 先注册分组倍率（auto 分组令牌的前提；顺序必须在建令牌之前）
     try:
